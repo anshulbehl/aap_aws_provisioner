@@ -1,0 +1,62 @@
+---
+- name: grab facts for control_nodes
+  ec2_instance_info:
+    region: "{{ ec2_region }}"
+    filters:
+      instance-state-name: running
+      "tag:Workshop_ansible": "{{ec2_name_prefix}}-ansible-aap-control*"
+  register: control_node_facts
+  
+- name: add ansible node to control_nodes and managed_nodes group
+  add_host:
+    name: "{{ item.tags.Name }}"
+    ansible_host: "{{ item.public_ip_address }}"
+    ansible_user: "{{ item.tags.username }}"
+    ansible_port: "22"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/{{ec2_name_prefix}}/{{ec2_name_prefix}}-private.pem"
+    private_ip: "{{item.private_ip_address}}"
+    groups:
+      - control_nodes
+  with_items: "{{ control_node_facts.instances }}"
+
+- name: grab facts for exec_nodes
+  ec2_instance_info:
+    region: "{{ ec2_region }}"
+    filters:
+      instance-state-name: running
+      "tag:Workshop_ansible": "{{ec2_name_prefix}}-ansible-aap-exec*"
+  register: exec_node_facts
+
+
+- name: add ansible node to control_nodes and managed_nodes group
+  add_host:
+    name: "{{ item.tags.Name }}"
+    ansible_host: "{{ item.private_ip_address }}"
+    ansible_port: "22"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/{{ec2_name_prefix}}/{{ec2_name_prefix}}-private.pem"
+    private_ip: "{{item.private_ip_address}}"
+    groups:
+      - exec_nodes
+  with_items: "{{ exec_node_facts.instances }}"
+
+- name: grab facts for db_nodes
+  ec2_instance_info:
+    region: "{{ ec2_region }}"
+    filters:
+      instance-state-name: running
+      "tag:Workshop_ansible": "{{ec2_name_prefix}}-ansible-aap-db"
+  register: db_node_facts
+
+
+- name: add ansible node to control_nodes and managed_nodes group
+  add_host:
+    name: "{{ item.tags.Name }}"
+    ansible_host: "{{ item.private_ip_address }}"
+    ansible_port: "22"
+    ansible_ssh_private_key_file: "{{ playbook_dir }}/{{ec2_name_prefix}}/{{ec2_name_prefix}}-private.pem"
+    private_ip: "{{item.private_ip_address}}"
+    groups:
+      - db_node
+  with_items: "{{ db_node_facts.instances }}"
+
+

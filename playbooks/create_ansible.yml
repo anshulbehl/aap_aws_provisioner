@@ -1,0 +1,51 @@
+---
+- name: Play to create ansible user
+  hosts: all
+  become: true
+  vars:
+    - user: ansible
+      ansible_ssh_private_key_file: "private-key.pem"
+      ansible_host_key_checking: false
+  tasks:
+    - name: Ensuring that wheel is able to use sudo without password
+      lineinfile:
+        path: /etc/sudoers
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+    - name: Create a 2048-bit SSH key for user {{ user }} in /home/{{ user }}/.ssh/id_rsa
+      ansible.builtin.user:
+        name: "{{ user }}"
+        password: "{{ user }}"
+        generate_ssh_key: yes
+        ssh_key_bits: 2048
+        ssh_key_file: .ssh/id_rsa
+        group: wheel
+    - name: Add user to sudoers file
+      lineinfile:
+        path: /etc/sudoers
+        regexp: '^ansibleuser'
+        line: 'ansibleuser ALL=(ALL) NOPASSWD: ALL'
+        validate: 'visudo -cf %s'
+
+- name: Play to Add keys between servers
+  hosts: all
+  become: true
+  become_user: ansible
+  vars:
+    user: "ansible"
+    ansible_ssh_private_key_file: "private-key.pem"
+  tasks:
+    - name: Fetch the keyfile from each node to control node
+      ansible.builtin.fetch:
+        src: "~/.ssh/id_rsa.pub"
+        dest: "./{{ ansible_host }}-id_rsa.pub"
+        flat: yes
+    - name: Set authorized key taken from file
+      ansible.posix.authorized_key:
+        user: "{{ user }}"
+        state: present
+        key: "{{ lookup('file', './{{ item }}-id_rsa.pub') }}"
+      when: "{{ item != ansible_host }}"
+      loop:  "{{ groups['all'] }}"
+

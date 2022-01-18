@@ -1,0 +1,45 @@
+# tasks file for aws_deploy
+- name: Create VPCs
+  include_tasks: create_vpc.yml
+
+- name: find ami for AAP control node
+  ec2_ami_info:
+    region: "{{ ec2_region }}"
+    owners: "{{ ec2_info[control_type].owners }}"
+    filters:
+      name: "{{ ec2_info[control_type].filter }}"
+      architecture: "{{ ec2_info[control_type].architecture }}"
+  register: amis
+
+- name: save ami for ansible control node
+  set_fact:
+    ansible_control_node_ami: >
+      {{ amis.images | selectattr('name', 'defined') | sort(attribute='name') | last }}
+
+- name: enforce that major and minor version are at least RHEL 8.4
+  assert:
+    that:
+      - ansible_control_node_ami.name[7]|int >= 4
+      - ansible_control_node_ami.name[5]|int >= 8
+    msg: "AWS ec2 image retrieved will not work with AAP 2, we need at least RHEL 8.4"
+
+- name: Create control nodes
+  include_tasks: control_nodes.yml
+  loop: "{{ range(1, control_nodes|default(1) + 1 ) | list }}"
+  loop_control:
+    loop_var: sequence
+
+- name: Create exec nodes
+  include_tasks: exec_nodes.yml
+  loop: "{{ range(1, exec_nodes|default(1) + 1 ) | list }}"
+  loop_control:
+    loop_var: sequence
+
+- name: Create DB node
+  include_tasks: db_node.yml
+
+- name: Create Inventory
+  include_tasks: create_inventory.yml
+
+
+

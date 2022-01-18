@@ -1,0 +1,31 @@
+---
+- name: ensure workshop folder {{ ec2_name_prefix }} exists
+  file:
+    path: "{{ playbook_dir }}/{{ ec2_name_prefix }}"
+    state: directory
+
+- name: grab information about AWS user
+  amazon.aws.aws_caller_info:
+    region: "{{ ec2_region }}"
+  register: whoami
+
+- name: print whoami
+  debug:
+    var: whoami
+
+- name: save username of AWS user
+  set_fact:
+    aws_user: '{{ whoami.arn.split("/")[-1] }}'
+
+- name: save account id of AWS user
+  set_fact:
+    aws_account: '{{ whoami.account }}'
+
+- name: teardown
+  include_tasks: teardown.yml
+  when: teardown | bool
+
+- name: provision aws resources and instances
+  include_tasks: provision.yml
+  tags: provisioned
+  when: not teardown|bool

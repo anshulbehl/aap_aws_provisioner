@@ -1,0 +1,39 @@
+---
+- name: Create EC2 instances for exec
+  ec2:
+    assign_public_ip: false
+    key_name: "{{ ec2_name_prefix }}-key"
+    group: "{{ ec2_security_group }}"
+    instance_type: "{{ ec2_info[non_control_type].size }}"
+    image: "{{ ansible_control_node_ami.image_id }}"
+    region: "{{ ec2_region }}"
+    count_tag:
+      Workshop_ansible: "{{ ec2_name_prefix }}-ansible-aap-exec{{ sequence }}"
+    instance_tags:
+      Workshop_ansible: "{{ ec2_name_prefix }}-ansible-aap-exec{{ sequence }}"
+      Workshop: "{{ ec2_name_prefix }}"
+      AWS_USERNAME: "{{ aws_user }}"
+      owner: "{{ aws_user }}"
+      username: "{{ ec2_info[control_type].username }}"
+      Info: "AWS_USERNAME that provisioned this-> {{ aws_user }}"
+    wait: "{{ ec2_wait }}"
+    vpc_subnet_id: "{{ ec2_vpc_subnet2_id }}"
+    volumes:
+      - device_name: /dev/sda1
+        volume_type: gp2
+        volume_size: "{{ ec2_info[non_control_type].disk_space }}"
+        delete_on_termination: true
+  register: control_output
+
+- name: Ensure tags are present
+  ec2_tag:
+    region: "{{ ec2_region }}"
+    resource: "{{ item.1.id }}"
+    state: present
+    tags:
+      Name: "{{ ec2_name_prefix }}-exec{{ sequence }}-node-aap"
+      Index: "{{ item[0] }}"
+      launch_time: "{{ item.1.launch_time }}"
+  with_indexed_items:
+    - "{{ control_output.instances }}"
+  when: control_output.instance_ids is not none

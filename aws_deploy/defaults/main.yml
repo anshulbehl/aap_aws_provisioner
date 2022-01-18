@@ -1,0 +1,101 @@
+---
+# defaults file for aws_deploy
+ec2_name_prefix: DEMO
+ec2_region: us-east-1
+ec2_wait: true
+teardown: false
+# need to circle back and fix this for teardown - sean
+ec2_az1: "{{ec2_region}}a"
+ec2_az2: "{{ec2_region}}b"
+ec2_subnet: "172.16.0.0/16"
+ec2_subnet2: "172.17.0.0/16"
+control_nodes: 2
+exec_nodes: 3
+control_type: "rhel8-aap"
+non_control_type: "rhel8"
+ec2_info:
+  rhel8-aap:
+    owners: 309956199498
+    size: m4.xlarge
+    os_type: linux
+    disk_space: 20
+    architecture: x86_64
+    filter: 'RHEL-8*HVM-*Hourly*'
+    username: ec2-user
+  rhel8:
+    owners: 309956199498
+    size: t3.micro
+    os_type: linux
+    disk_space: 10
+    architecture: x86_64
+    filter: 'RHEL-8*HVM-*Hourly*'
+    username: ec2-user
+ports:
+  - proto: 47
+    to_port: -1
+    from_port: -1
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 443
+    from_port: 443
+    cidr_ip: 0.0.0.0/0
+  - proto: icmp
+    to_port: -1
+    from_port: -1
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 80
+    from_port: 80
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 22
+    from_port: 22
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 3389
+    from_port: 3389
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 8000
+    from_port: 8000
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 8080
+    from_port: 8080
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 8088
+    from_port: 8088
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 8089
+    from_port: 8089
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 8443
+    from_port: 8443
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 830
+    from_port: 830
+    cidr_ip: 0.0.0.0/0
+  - proto: tcp
+    to_port: 5986
+    from_port: 5986
+    cidr_ip: 0.0.0.0/0
+    rule_desc: WinRM
+  - proto: udp
+    to_port: 514
+    from_port: 514
+    cidr_ip: 0.0.0.0/0
+    rule_desc: WinRM
+  - proto: tcp
+    to_port: 5432
+    from_port: 5432
+    cidr_ip: 172.16.0.0/14
+    rule_desc: Cluster option DB port
+  - proto: tcp
+    to_port: 27199
+    from_port: 27199
+    cidr_ip: 0.0.0.0/0
+    rule_desc: Cluster option mesh port

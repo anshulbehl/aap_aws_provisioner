@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  vars:
+    teardown: true
+  tasks:
+    - name: Deploy
+      include_role:
+        name: aws_deploy
+
+

@@ -1,0 +1,117 @@
+---
+- hosts: localhost
+  tasks:
+    - name: Deploy
+      include_role:
+        name: aws_deploy
+
+- name: wait for all nodes to have SSH reachability
+  hosts: "control_nodes"
+  become: true
+  gather_facts: false
+  tasks:
+    - include_role:
+        name: ansible.workshops.connectivity_test
+
+- name: create inventory file on control1
+  hosts: "*control1*"
+  become: true
+  vars:
+    foo: []
+  tasks:
+    - dnf: name=python3-pip state=present 
+    - name: Install ansible on control node
+      pip:
+        name: ansible
+ 
+- name: Create ansible user and download tar
+  hosts: "*control1*"
+  vars:
+    inventory_list: []
+  tasks:
+    - name: Check if inventory file exists
+      stat:
+        path: "~/inventory"
+      register: file_data
+
+    - name: Delete if file exists
+      file:
+        path: "~/inventory"
+        state: absent
+      when: file_data.stat.exists
+
+    - name: Create inventory list
+      set_fact:
+        inventory_list: "{{ inventory_list +  [hostvars[item]['private_ip']] }}"
+      with_items:
+        - "{{ groups['all'] }}"
+
+    - lineinfile:
+        dest: "~/inventory"
+        line: "{{ item }}"
+        create: yes
+      with_items: "{{ inventory_list }}"
+
+    - name: Copy create ansible playbook on main controller
+      copy:
+        src: "playbooks/create_ansible.yml"
+        dest: "~/create_ansible.yml"
+
+    - name: copy private key file
+      copy:  
+        src: "{{ playbook_dir }}/{{ec2_name_prefix}}/{{ec2_name_prefix}}-private.pem"
+        dest: "~/private-key.pem"
+        mode: 0600
+
+    - name: Run ansible command
+      command:
+        cmd: ansible-playbook -i inventory create_ansible.yml
+
+    - name: download AAP
+      include_role:
+        name: ansible.workshops.aap_download
+
+
+- name: Become root and install AAP
+  hosts: "*control1*"
+  become: true
+  vars:
+    user: ansible
+    aap_dir: "/home/{{ user }}/aap_install"
+  tasks:
+    - name: Copy aap.tar.gz to ansible user home
+      copy:
+        src: "aap.tar.gz"
+        dest: "/home/ansible/"
+    - name: Create directory for automation controller
+      file:
+        path: "{{ aap_dir }}"
+        state: directory
+    - name: Extract tarball
+      unarchive:
+        remote_src: yes
+        src: "/home/ansible/aap.tar.gz"
+        dest: "{{ aap_dir }}"
+        extra_opts: ['--strip-components=1', '--show-stored-names']
+    - name: Set AAP local repository on controller node
+      include_role:
+        name: ansible.workshops.aap_repo
+    - name: template inventory file
+      template:
+        src: "templates/inventory.j2"
+        dest: "{{ aap_dir }}/inventory"
+
+- name: Become ansible user and run installer
+  hosts: "*control1*"
+  become_user: ansible 
+  become: true
+  vars:
+    user: ansible
+    aap_dir: "/home/{{ user }}/aap_install"
+  tasks:
+    - name: run the Automation Controller installer
+      shell: "./setup.sh -e gpgcheck=0"
+      args:
+        chdir: "{{ aap_dir }}"
+      async: 1400
+      poll: 15

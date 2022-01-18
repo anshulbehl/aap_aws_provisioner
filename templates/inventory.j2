@@ -1,0 +1,45 @@
+[automationcontroller]
+{% for server in groups['control_nodes'] %}
+{% if 'control1' in server  %}
+{{ hostvars[server]['private_ip'] }} ansible_connection=local
+{% else %}
+{{ hostvars[server]['private_ip'] }}
+{% endif %}
+{% endfor %}
+[automationcontroller:vars]
+node_type=control 
+peers=execution_nodes 
+
+[execution_nodes]
+{% for server in groups['exec_nodes'] %}
+{{ hostvars[server]['private_ip'] }}
+{% endfor %}
+
+[database]
+{% for server in groups['db_node'] %}
+{{ hostvars[server]['private_ip'] }}
+{% endfor %}
+
+
+
+[all:vars]
+admin_password='{{ admin_password}}'
+ansible_user=ansible
+ansible_become=true
+ansible_host_key_checking=false
+
+
+pg_host='controldatabase.site1.example.com' 
+pg_port='5432' 
+
+pg_database='awx'
+pg_username='awx'
+
+pg_password='{{ admin_password }}'
+
+pg_sslmode='prefer'
+
+registry_url='registry.redhat.io' 
+registry_username='{{ registry_username }}'
+
+registry_password='{{ registry_password }}'

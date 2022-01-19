@@ -24,10 +24,10 @@ peers=execution_nodes
 
 [all:vars]
 admin_password='{{ admin_password}}'
-ansible_user=ansible
 ansible_become=true
+ansible_user=ansible
 ansible_host_key_checking=false
-
+ansible_ssh_private_key_file="/home/ansible/.ssh/id_rsa"
 {% for server in groups['db_node'] %}
 pg_host={{ hostvars[server]['private_ip'] }}
 {% endfor %}

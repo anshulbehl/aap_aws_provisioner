@@ -29,3 +29,5 @@
   include_tasks: provision.yml
   tags: provisioned
   when: not teardown|bool
+
+#- include_tasks: create_inventory.yml

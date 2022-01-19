@@ -103,15 +103,19 @@
 
 - name: Become ansible user and run installer
   hosts: "*control1*"
-  become_user: ansible 
+  become_user: ansible
   become: true
   vars:
     user: ansible
     aap_dir: "/home/{{ user }}/aap_install"
   tasks:
-    - name: run the Automation Controller installer
-      shell: "./setup.sh -e gpgcheck=0"
-      args:
-        chdir: "{{ aap_dir }}"
-      async: 1400
-      poll: 15
+   - name: run the Automation Controller installer
+     command: "sudo ./setup.sh -e gpgcheck=0"
+     args:
+       chdir: "{{ aap_dir }}"
+     async: 1400
+     poll: 15
+   - name: Show Details of controller node
+     debug:
+       msg: "IP address of controller is {{ hostvars[item]['ansible_host'] }}"
+     with_items: "{{ groups['control_nodes'] }}"

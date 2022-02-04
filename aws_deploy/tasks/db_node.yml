@@ -17,6 +17,7 @@
       Info: "AWS_USERNAME that provisioned this-> {{ aws_user }}"
       username: "{{ ec2_info[control_type].username }}"
     wait: "{{ ec2_wait }}"
+    wait_timeout: 600
     vpc_subnet_id: "{{ ec2_vpc_subnet2_id }}"
     volumes:
       - device_name: /dev/sda1

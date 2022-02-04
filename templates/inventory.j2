@@ -7,8 +7,8 @@
 {% endif %}
 {% endfor %}
 [automationcontroller:vars]
-node_type=control 
-peers=execution_nodes 
+node_type=control
+peers=execution_nodes
 
 [execution_nodes]
 {% for server in groups['exec_nodes'] %}
@@ -31,7 +31,7 @@ ansible_ssh_private_key_file="/home/ansible/.ssh/id_rsa"
 {% for server in groups['db_node'] %}
 pg_host={{ hostvars[server]['private_ip'] }}
 {% endfor %}
-pg_port='5432' 
+pg_port='5432'
 
 pg_database='awx'
 pg_username='awx'
@@ -40,7 +40,7 @@ pg_password='{{ admin_password }}'
 
 pg_sslmode='prefer'
 
-registry_url='registry.redhat.io' 
+registry_url='registry.redhat.io'
 registry_username='{{ registry_username }}'
 
 registry_password='{{ registry_password }}'

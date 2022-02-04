@@ -39,6 +39,7 @@
 
 - name: delete nat gateway
   ec2_vpc_nat_gateway:
+    region: "{{ ec2_region }}"
     nat_gateway_id: "{{item.nat_gateway_id}}"
     release_eip: yes
     state: absent

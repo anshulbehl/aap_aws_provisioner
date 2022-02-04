@@ -1,0 +1,12 @@
+---
+# region where the nodes will live
+ec2_region: us-east-1
+ec2_name_prefix: DEMO_PREFIX # prefix for all the nodes that will be provisioned
+offline_token: #required to download AAP setup bundle
+# Required for podman authentication to registry.redhat.io
+registry_username:
+registry_password:
+admin_password: #AAP login password default user is admin
+control_nodes: 2 #count of control nodes needed
+exec_nodes: 3 # count of execution nodes needed
+provided_sha_value: "ea2843fae672274cb1b32447c9a54c627aa5bdf5577d9a6c7f957efe68be8c01" #SHA value of 2.1 setup bundle

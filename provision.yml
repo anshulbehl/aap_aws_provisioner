@@ -19,11 +19,11 @@
   vars:
     foo: []
   tasks:
-    - dnf: name=python3-pip state=present 
+    - dnf: name=python3-pip state=present
     - name: Install ansible on control node
       pip:
         name: ansible
- 
+
 - name: Create ansible user and download tar
   hosts: "*control1*"
   vars:
@@ -58,7 +58,7 @@
         dest: "~/create_ansible.yml"
 
     - name: copy private key file
-      copy:  
+      copy:
         src: "{{ playbook_dir }}/{{ec2_name_prefix}}/{{ec2_name_prefix}}-private.pem"
         dest: "~/private-key.pem"
         mode: 0600
@@ -119,3 +119,5 @@
      debug:
        msg: "IP address of controller is {{ hostvars[item]['ansible_host'] }}"
      with_items: "{{ groups['control_nodes'] }}"
+  tags:
+    - setup
